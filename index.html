@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudmon Master Service Catalogue</title>
+    <style>
+        :root {
+            /* Cloudmon Brand Colors */
+            --primary: #0f172a;       /* Slate 900 */
+            --secondary: #334155;     /* Slate 700 */
+            --accent: #2563eb;        /* Blue 600 */
+            --bg-page: #f8fafc;       /* Slate 50 */
+            --bg-card: #ffffff;
+            --border: #e2e8f0;        /* Slate 200 */
+            
+            /* Status Colors */
+            --badge-core-bg: #dbeafe; --badge-core-text: #1e40af;
+            --badge-addon-bg: #f3e8ff; --badge-addon-text: #6b21a8;
+            --badge-crit-high-bg: #fee2e2; --badge-crit-high-text: #991b1b;
+            --badge-crit-med-bg: #fef9c3; --badge-crit-med-text: #854d0e;
+            --badge-crit-low-bg: #dcfce7; --badge-crit-low-text: #166534;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--primary);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            margin-top: 0.75rem;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        /* Controls Section */
+        .controls {
+            padding: 2rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        select {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--primary);
+            background-color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        select:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Content Area */
+        #contentArea {
+            padding: 2rem;
+            min-height: 400px;
+            background-color: #f8fafc;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 4rem 0;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Service Card Details */
+        .service-card {
+            display: none; /* Hidden by default */
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: #fff;
+        }
+
+        .service-title h2 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .service-meta {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1px;
+            background-color: var(--border); /* Creates grid lines */
+        }
+
+        @media (min-width: 768px) {
+            .grid-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .detail-item {
+            background-color: white;
+            padding: 1.5rem;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--secondary);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-core { background: var(--badge-core-bg); color: var(--badge-core-text); }
+        .badge-addon { background: var(--badge-addon-bg); color: var(--badge-addon-text); }
+        .badge-crit-high { background: var(--badge-crit-high-bg); color: var(--badge-crit-high-text); }
+        .badge-crit-med { background: var(--badge-crit-med-bg); color: var(--badge-crit-med-text); }
+        .badge-crit-low { background: var(--badge-crit-low-bg); color: var(--badge-crit-low-text); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Cloudmon Master Service Catalogue</h1>
+        <p>Aligned with Cloudmon.ai Website & Sales Taxonomy</p>
+    </div>
+
+    <div class="controls">
+        <div class="form-group">
+            <label for="catSelect">1. Website Service Category</label>
+            <select id="catSelect">
+                <option value="">-- Select Category --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="servSelect">2. Website Service Name</label>
+            <select id="servSelect" disabled>
+                <option value="">-- Waiting for Category --</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="contentArea">
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>Select a Service to View Details</h3>
+            <p>Please choose a category from the dropdown above to begin.</p>
+        </div>
+
+        <div id="serviceCard" class="service-card">
+            <div class="card-header">
+                <div class="service-title">
+                    <h2 id="dWebName">Service Name</h2>
+                    <div class="service-meta" id="dOwner">Owned by: Product Team</div>
+                </div>
+                <div><span id="dPkg" class="badge badge-core">Core</span></div>
+            </div>
+
+            <div class="grid-layout">
+                <div class="detail-item full-width">
+                    <div class="detail-label">Service Description (Sales)</div>
+                    <div class="detail-value" id="dDesc"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Internal Technical Name</div>
+                    <div class="detail-value" id="dTechName" style="font-family: monospace; font-weight: 600;"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Service Logic (Inputs / Value)</div>
+                    <div class="detail-value" id="dLogic"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Build Version</div>
+                    <div class="detail-value" id="dVer"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Pricing Model</div>
+                    <div class="detail-value" id="dPrice"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Readiness / Pre-reqs</div>
+                    <div class="detail-value" id="dReady"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Implementation Effort</div>
+                    <div class="detail-value" id="dEffort"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Criticality</div>
+                    <div class="detail-value"><span id="dCrit" class="badge"></span></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">SLA Target</div>
+                    <div class="detail-value" id="dSLA"></div>
+                </div>
+                
+                <div class="detail-item full-width">
+                    <div class="detail-label">Reference Documentation</div>
+                    <div class="detail-value" id="dRef"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // REVISED MASTER DATABASE (Aligned with Website Taxonomy)
+    const db = [
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "Branch Site Experience",
+            "techName": "WiFi Signal Strength (DEM)",
+            "owner": "Product Team",
+            "desc": "RSSI and SSID signal quality on user device.",
+            "logic": "Value: Troubleshooting WiFi is slow.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent on Laptop",
+            "price": "Included",
+            "effort": "High",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "DNS Health",
+            "techName": "DNS Resolution Monitor",
+            "owner": "Infra Team",
+            "desc": "Time taken to resolve hostname to IP.",
+            "logic": "Value: DNS health check.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DNS Server IP",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "End User Experience (DEM)",
+            "techName": "DEM (Endpoint Agent)",
+            "owner": "Product Team",
+            "desc": "Latency from user laptop to SaaS apps (O365/Salesforce).",
+            "logic": "Value: Remote worker experience.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent on Laptop",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "HTTP Error Tracking",
+            "techName": "Status Code Monitoring",
+            "owner": "Product Team",
+            "desc": "Alerts on 4xx/5xx error spikes.",
+            "logic": "Value: Detects broken links/server errors.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Public URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "SSL Expiry Check",
+            "techName": "SSL Certificate Monitoring",
+            "owner": "SecOps",
+            "desc": "Alerts X days before SSL expiry.",
+            "logic": "Value: Prevents embarrassing security warnings.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Public URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "Transaction Monitoring",
+            "techName": "Content Keyword Check",
+            "owner": "Product Team",
+            "desc": "Verifies specific text exists on page (e.g. Welcome).",
+            "logic": "Value: Detects defacement or blank pages.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Keyword defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "Website Availability",
+            "techName": "Website Availability (HTTP)",
+            "owner": "Product Team",
+            "desc": "Basic Ping/Get check for URL.",
+            "logic": "Value: Is my site up?",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Public URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Digital Experience Monitoring",
+            "webName": "Website Performance",
+            "techName": "Website Response Time",
+            "owner": "Product Team",
+            "desc": "Time to First Byte (TTFB) and Full Load measurement.",
+            "logic": "Value: UX optimization.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Public URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "Assistive AI Analysis",
+            "techName": "Assistive AI Log Analysis",
+            "owner": "SecOps",
+            "desc": "AI summary of error logs in plain English.",
+            "logic": "Value: Faster RCA for L1 techs.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Azure OpenAI Key",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Low",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "Event Log Security",
+            "techName": "Windows Event Log Rules",
+            "owner": "SecOps",
+            "desc": "Alerts on specific Event IDs (e.g. 4625 Failed Login).",
+            "logic": "Value: Intrusion detection.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Audit Policy",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "Log Pattern Detection",
+            "techName": "Log Pattern Matching",
+            "owner": "SecOps",
+            "desc": "Regex search in log streams (e.g. Out of Memory).",
+            "logic": "Value: Proactive error catching.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Regex Defined",
+            "price": "Included",
+            "effort": "High",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "SNMP Trap Manager",
+            "techName": "SNMP Trap Receiver",
+            "owner": "Infra Team",
+            "desc": "Alerts on hardware traps (Fan fail Power fail).",
+            "logic": "Value: Real-time hardware alerts.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Trap Dest Config",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "Syslog Management",
+            "techName": "Syslog Collection",
+            "owner": "SecOps",
+            "desc": "Centralized storage of Linux/Network logs.",
+            "logic": "Value: Compliance & Forensics.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Syslog Forwarding",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Log Monitoring",
+            "webName": "User Security Audit",
+            "techName": "Account Lockout Monitor",
+            "owner": "SecOps",
+            "desc": "Alerts when AD user accounts are locked.",
+            "logic": "Value: Security/User support.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "AD Event Logs",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Access Point Performance",
+            "techName": "Access Point (AP) Health",
+            "owner": "Infra Team",
+            "desc": "Status (Up/Down) and Client Count per AP.",
+            "logic": "Value: WiFi coverage assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WLC Reachable",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "BGP Connectivity",
+            "techName": "BGP Session Monitoring",
+            "owner": "Infra Team",
+            "desc": "State of BGP peering (Established/Idle).",
+            "logic": "Value: ISP/WAN connectivity.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Config Drift Detection",
+            "techName": "Config Change Detection",
+            "owner": "Infra Team",
+            "desc": "Alerts (Diff) when config changes.",
+            "logic": "Value: Audit trail/Unauthorized change.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Config Backup",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Firewall Monitoring",
+            "techName": "Firewall Throughput",
+            "owner": "Infra Team",
+            "desc": "Session count and bandwidth on Firewall interfaces.",
+            "logic": "Value: Security device capacity.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "IoT Monitoring",
+            "techName": "IoT Reachability (ICMP)",
+            "owner": "Infra Team",
+            "desc": "Ping check for Cameras Sensors PLCs.",
+            "logic": "Value: Facility uptime.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "IP Reachable",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "IoT Service Check",
+            "techName": "IoT Port Check",
+            "owner": "Infra Team",
+            "desc": "Verifies specific service port on IoT device.",
+            "logic": "Value: Service assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Port Defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "IP Address Management",
+            "techName": "IPAM (Scan Subnet)",
+            "owner": "Infra Team",
+            "desc": "Scans subnet for Used/Free IPs.",
+            "logic": "Value: IP inventory management.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "ICMP Scan",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "IP Conflict Detection",
+            "techName": "IP Conflict Detection",
+            "owner": "Infra Team",
+            "desc": "Alerts if two MACs claim same IP.",
+            "logic": "Value: Network stability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "ARP Scan",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Load Balancer Health",
+            "techName": "Load Balancer VIP Status",
+            "owner": "Infra Team",
+            "desc": "Health of Virtual IPs on F5/Citrix/HAProxy.",
+            "logic": "Value: App delivery availability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP/API",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Network Configuration Mgmt",
+            "techName": "Configuration Backup",
+            "owner": "Infra Team",
+            "desc": "Daily backup of Router/Switch configs.",
+            "logic": "Value: Disaster Recovery.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SSH/Telnet Write",
+            "price": "Included",
+            "effort": "High",
+            "crit": "High",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Network Topology",
+            "techName": "L2/L3 Topology Discovery",
+            "owner": "Infra Team",
+            "desc": "Auto-mapping of CDP/LLDP neighbors.",
+            "logic": "Value: Live network diagrams.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "OSPF Routing Health",
+            "techName": "OSPF Neighbor State",
+            "owner": "Infra Team",
+            "desc": "Monitoring OSPF adjacencies.",
+            "logic": "Value: Internal routing health.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Office Device Monitoring",
+            "techName": "Printer Ink/Toner Status",
+            "owner": "Infra Team",
+            "desc": "Monitoring consumables via SNMP.",
+            "logic": "Value: Office ops efficiency.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP OID",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Path Trace Analysis",
+            "techName": "Trace Path Visualizer",
+            "owner": "Infra Team",
+            "desc": "Hop-by-hop latency analysis to target.",
+            "logic": "Value: Pinpoints It's the ISP's fault.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Firewall ICMP",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Physical Security Monitoring",
+            "techName": "CCTV DVR Status",
+            "owner": "SecOps",
+            "desc": "Monitoring storage/recording status (via SNMP).",
+            "logic": "Value: Physical security assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP OID",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Port Mapper",
+            "techName": "Switch Port Mapping",
+            "owner": "Infra Team",
+            "desc": "Maps MAC addresses to physical switch ports.",
+            "logic": "Value: Where is this device plugged in?",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Power Infrastructure",
+            "techName": "UPS Battery Status",
+            "owner": "Infra Team",
+            "desc": "Battery health and load monitoring.",
+            "logic": "Value: Power backup assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP OID",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Critical",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Rogue SSID Detection",
+            "techName": "Rogue SSID Detection",
+            "owner": "SecOps",
+            "desc": "Alerts on unknown SSIDs broadcasting nearby.",
+            "logic": "Value: Security (Evil Twin detection).",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WLC Support",
+            "price": "Add-on",
+            "effort": "Low",
+            "crit": "Critical",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "SSID Analytics",
+            "techName": "SSID Usage Analytics",
+            "owner": "Infra Team",
+            "desc": "Traffic and Client volume per SSID (Guest vs Corp).",
+            "logic": "Value: Usage trending.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WLC Reachable",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Stack Redundancy",
+            "techName": "Switch Stack Health",
+            "owner": "Infra Team",
+            "desc": "Status of stack members and ring redundancy.",
+            "logic": "Value: High availability verification.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Switch & Router Monitoring",
+            "techName": "Router Interface Monitoring",
+            "owner": "Infra Team",
+            "desc": "Bandwidth CRC errors Discards Flapping status.",
+            "logic": "Value: Link quality assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "VPN Monitoring",
+            "techName": "VPN Tunnel Status",
+            "owner": "Infra Team",
+            "desc": "IPsec/SSL VPN tunnel Up/Down status.",
+            "logic": "Value: Remote site connectivity.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP/Trap",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Monitoring",
+            "webName": "Wireless LAN Monitoring",
+            "techName": "WLC Monitoring",
+            "owner": "Infra Team",
+            "desc": "CPU Mem and AP count on Wireless Controllers.",
+            "logic": "Value: Central WiFi management.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Network Traffic Monitoring",
+            "webName": "Bandwidth Forensics",
+            "techName": "Top Talkers Report",
+            "owner": "Infra Team",
+            "desc": "Source/Dest IP pairs consuming most data.",
+            "logic": "Value: Forensic analysis.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Flow Data",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Traffic Monitoring",
+            "webName": "QoS Monitoring",
+            "techName": "QoS Class Monitoring",
+            "owner": "Infra Team",
+            "desc": "Traffic volume per DSCP/CoS tag.",
+            "logic": "Value: VoIP quality assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Flow Data",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Network Traffic Monitoring",
+            "webName": "Traffic Analysis (NetFlow)",
+            "techName": "NetFlow Traffic Analysis",
+            "owner": "Infra Team",
+            "desc": "Application visibility (Layer 7) via Flow data.",
+            "logic": "Value: Who is using all the bandwidth?",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "NetFlow Export",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Container Resource Usage",
+            "techName": "Docker Resource Stats",
+            "owner": "DevOps Team",
+            "desc": "CPU/Mem usage per container ID.",
+            "logic": "Value: Optimization of container density.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Docker API Access",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Critical Server Monitoring",
+            "techName": "Service Status Monitoring",
+            "owner": "Product Team",
+            "desc": "Monitors Up/Down state of critical services (IIS Nginx Print Spooler).",
+            "logic": "Value: Ensures business apps are running.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Service names defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "DR Replication Status",
+            "techName": "Hyper-V Replica Status",
+            "owner": "Product Team",
+            "desc": "Monitors replication health for DR scenarios.",
+            "logic": "Value: Disaster Recovery assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WinRM/WMI",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Datastore Performance",
+            "techName": "VMware Datastore Monitoring",
+            "owner": "Product Team",
+            "desc": "Latency IOPs and Free Space of VMFS/NFS stores.",
+            "logic": "Value: Prevents Stun due to slow storage.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Directory Growth Analytics",
+            "techName": "Directory Size Monitoring",
+            "owner": "Product Team",
+            "desc": "Tracks growth of specific folders (e.g. Log folders).",
+            "logic": "Value: Detects log runaway issues.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Path defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Docker Monitoring",
+            "techName": "Docker Container Status",
+            "owner": "DevOps Team",
+            "desc": "Up/Down status of individual containers.",
+            "logic": "Value: Microservice availability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Docker API Access",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "File Integrity Monitoring",
+            "techName": "File Integrity Monitoring",
+            "owner": "Product Team",
+            "desc": "Alerts on changes to critical files (e.g. /etc/passwd).",
+            "logic": "Value: Security/Compliance requirement.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "File path defined",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "File System Analytics",
+            "techName": "File System/Disk Usage",
+            "owner": "Product Team",
+            "desc": "Monitors free space (%) and growth rate of disk partitions.",
+            "logic": "Value: Prevents Disk Full outages.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent installed",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Hardware Health",
+            "techName": "Hardware Health (via SNMP)",
+            "owner": "Infra Team",
+            "desc": "Temp Fan speed Power Supply status (Dell/HP/Cisco UCS).",
+            "logic": "Value: Prevents physical hardware failure.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP Enabled",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Hyper-V Monitoring",
+            "techName": "Hyper-V Host Monitoring",
+            "owner": "Product Team",
+            "desc": "Microsoft Hyper-V parent partition health.",
+            "logic": "Value: Native MS virtualization support.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WinRM/WMI",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Hypervisor Monitoring",
+            "techName": "ESXi Host Monitoring",
+            "owner": "Product Team",
+            "desc": "CPU/Mem/Disk load of the physical hypervisor.",
+            "logic": "Value: Capacity management for the cluster.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Kubernetes Node Health",
+            "techName": "Kubernetes Node Monitoring",
+            "owner": "DevOps Team",
+            "desc": "Kubelet status and node capacity (Ready/Not Ready).",
+            "logic": "Value: Cluster health.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "K8s API Token",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Linux Task Monitoring",
+            "techName": "Cron Job Monitoring",
+            "owner": "Product Team",
+            "desc": "Tracks execution of scheduled tasks/cron jobs on Linux.",
+            "logic": "Value: Ensures backups/ETL jobs run on time.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Cron logs accessible",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Log Availability Check",
+            "techName": "Log File Presence Check",
+            "owner": "Product Team",
+            "desc": "Alerts if a specific log file stops updating or is deleted.",
+            "logic": "Value: Ensures audit trails are active.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Log path defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Physical Server Health",
+            "techName": "OS Performance Monitoring",
+            "owner": "Product Team",
+            "desc": "Real-time tracking of CPU RAM Disk IO and Load Average",
+            "logic": "Input: Agent/SNMP/WMI. Value: Core health visibility.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent installed",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Pod Health Monitoring",
+            "techName": "Pod Health Checks",
+            "owner": "DevOps Team",
+            "desc": "CrashLoopBackOff and ImagePullBackOff detection.",
+            "logic": "Value: App deployment troubleshooting.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "K8s API Token",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Process Optimization",
+            "techName": "Process Resource Monitoring",
+            "owner": "Product Team",
+            "desc": "Tracks CPU/Mem usage of specific running processes (e.g. sqlservr.exe).",
+            "logic": "Value: Identifies \"noisy neighbor\" apps.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Process list defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "RAID Health",
+            "techName": "RAID Controller Monitoring",
+            "owner": "Infra Team",
+            "desc": "Status of physical disks and logical volumes in RAID arrays.",
+            "logic": "Value: Critical data protection.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNMP/Agent",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Resource Pool Analytics",
+            "techName": "VMware Resource Pool Monitor",
+            "owner": "Product Team",
+            "desc": "Usage vs Limit tracking for Resource Pools.",
+            "logic": "Value: Guaranteeing tenant performance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Server Network Performance",
+            "techName": "Network Interface Traffic",
+            "owner": "Infra Team",
+            "desc": "In/Out bandwidth Packet Drop Errors on server NICs.",
+            "logic": "Value: Capacity planning.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent installed",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Service Configuration Audit",
+            "techName": "Service Start Mode Check",
+            "owner": "Product Team",
+            "desc": "Alerts if a service meant to be Auto is set to Manual.",
+            "logic": "Value: Prevents configuration drift.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Standard Policy defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Snapshot Auditing",
+            "techName": "VMware Snapshot Monitoring",
+            "owner": "Product Team",
+            "desc": "Alerts on old or large snapshots.",
+            "logic": "Value: Prevents storage bloat and perf issues.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Uptime Reporting",
+            "techName": "System Uptime Tracking",
+            "owner": "Product Team",
+            "desc": "Reports on last reboot time and availability duration.",
+            "logic": "Value: SLA reporting.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "N/A",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "VM Sprawl Detection",
+            "techName": "Orphaned VM Detection",
+            "owner": "Product Team",
+            "desc": "Identifies VMs registered but missing files (or vice versa).",
+            "logic": "Value: Cleanups and license savings.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Virtualization Management Plane",
+            "techName": "vCenter Health Monitoring",
+            "owner": "Product Team",
+            "desc": "Monitoring of the vCenter appliance services and DB.",
+            "logic": "Value: Management plane availability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "vCenter IP/Creds",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Windows Task Monitoring",
+            "techName": "Windows Scheduled Task Monitor",
+            "owner": "Product Team",
+            "desc": "Monitors status and last run result of Windows Tasks.",
+            "logic": "Value: Critical for Windows admin automation.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "WMI Access",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Server Monitoring",
+            "webName": "Zombie Process Remediation",
+            "techName": "Zombie Process Detection",
+            "owner": "Product Team",
+            "desc": "Identifies defunct processes consuming PID slots.",
+            "logic": "Value: System hygiene and stability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent installed",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Application Availability",
+            "techName": "TCP Port Check",
+            "owner": "Infra Team",
+            "desc": "Verifies connectivity to specific ports (e.g. 3306 1433).",
+            "logic": "Value: Service reachability.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Port defined",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Database Latency",
+            "techName": "DB Connection Time",
+            "owner": "App Team",
+            "desc": "Latency to establish DB connection.",
+            "logic": "Value: App performance bottleneck ID.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Creds",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Database Monitoring",
+            "techName": "SQL Query Monitor",
+            "owner": "App Team",
+            "desc": "Custom SQL query execution to check data values.",
+            "logic": "Value: Business logic monitoring.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Creds (RO)",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Database Performance",
+            "techName": "Buffer Cache Hit Ratio",
+            "owner": "App Team",
+            "desc": "Memory efficiency of DB engine.",
+            "logic": "Value: DB Tuning metrics.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Admin",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Directory Services Health",
+            "techName": "Active Directory Replication",
+            "owner": "Infra Team",
+            "desc": "Sync status between Domain Controllers.",
+            "logic": "Value: Login/Auth health.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "AD Admin",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Critical",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Email Service Health",
+            "techName": "Exchange Server Queue",
+            "owner": "App Team",
+            "desc": "Mail queue length monitoring.",
+            "logic": "Value: Email delivery assurance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Exchange Admin",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Query Optimization",
+            "techName": "Long Running Queries",
+            "owner": "App Team",
+            "desc": "Alerts on queries taking > X seconds.",
+            "logic": "Value: Performance optimization.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Logs",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Session Load",
+            "techName": "Active Session Count",
+            "owner": "App Team",
+            "desc": "Number of concurrent DB connections.",
+            "logic": "Value: Licensing/Capacity tracking.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Admin",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Service Monitoring",
+            "webName": "Storage Capacity",
+            "techName": "Tablespace Usage",
+            "owner": "App Team",
+            "desc": "Usage of DB storage containers.",
+            "logic": "Value: Prevents DB freeze.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "DB Admin",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "AI Integration Hub",
+            "techName": "Azure OpenAI Integration",
+            "owner": "Product Team",
+            "desc": "Connect to Azure AI for log analysis.",
+            "logic": "Value: AI-Assist capabilities.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Azure Subscription",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Low",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Asset Firmware Inventory",
+            "techName": "Firmware Version Inventory",
+            "owner": "Infra Team",
+            "desc": "Reports OS/Firmware version of all assets.",
+            "logic": "Value: Patch management planning.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Discovery",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Auto-Remediation",
+            "techName": "Service Restart Action",
+            "owner": "DevOps Team",
+            "desc": "Auto-restart service if down.",
+            "logic": "Value: Immediate fix.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Agent Privileges",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Automated Reporting",
+            "techName": "Scheduled Report Delivery",
+            "owner": "Product Team",
+            "desc": "Email reports automatically on Mon/Fri.",
+            "logic": "Value: Set and forget reporting.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SMTP",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Billing/Bandwidth Reports",
+            "techName": "Interface Utilization Report",
+            "owner": "Infra Team",
+            "desc": "Bandwidth usage over time (95th percentile).",
+            "logic": "Value: ISP billing validation.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Flow/SNMP",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Capacity Planning Reports",
+            "techName": "Trend Analysis Report",
+            "owner": "Product Team",
+            "desc": "Historical growth trends (Capacity planning).",
+            "logic": "Value: Budget forecasting.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Data Retention",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "ChatOps Integration (Slack)",
+            "techName": "Slack Webhook",
+            "owner": "DevOps Team",
+            "desc": "Post alerts to specific Slack Channels.",
+            "logic": "Value: DevOps ChatOps.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Webhook URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "ChatOps Integration (Teams)",
+            "techName": "Microsoft Teams Webhook",
+            "owner": "DevOps Team",
+            "desc": "Post alerts to Teams Channels.",
+            "logic": "Value: Enterprise collaboration.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Webhook URL",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Critical Alerting (SMS)",
+            "techName": "SMS Alerting (Gateway)",
+            "owner": "Product Team",
+            "desc": "Text message alerts via Twilio/Clickatell.",
+            "logic": "Value: Urgent/Critical alerts.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SMS API Key",
+            "price": "Add-on",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Custom Dashboards",
+            "techName": "Custom Dashboard Builder",
+            "owner": "Product Team",
+            "desc": "Drag-and-drop widget creation.",
+            "logic": "Value: Personalized NOC screens.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "N/A",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "DevOps Integration (Jira)",
+            "techName": "Jira Issue Creation",
+            "owner": "DevOps Team",
+            "desc": "Create Jira bugs from monitoring alerts.",
+            "logic": "Value: Dev workflow.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Jira API",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Executive Reporting",
+            "techName": "Executive Summary Report",
+            "owner": "Product Team",
+            "desc": "High-level Uptime & SLA PDF report.",
+            "logic": "Value: CIO/Management view.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Data Retention",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Geo Monitoring",
+            "techName": "Public Status Page",
+            "owner": "Product Team",
+            "desc": "Read-only view of service health for end-users.",
+            "logic": "Value: Transparency.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Configured View",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Governance & Audit",
+            "techName": "Audit Log Report",
+            "owner": "SecOps",
+            "desc": "Who changed what configuration in Cloudmon.",
+            "logic": "Value: Governance & Security.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Audit Logs",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Hardware Asset Mgmt",
+            "techName": "Asset Inventory Reporting",
+            "owner": "Infra Team",
+            "desc": "Auto-discovery of Serial # Make Model.",
+            "logic": "Value: Asset lifecycle management.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Discovery",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Helpdesk Integration (Zoho)",
+            "techName": "Zoho Desk Integration",
+            "owner": "Support Team",
+            "desc": "Create tickets in Zoho Desk.",
+            "logic": "Value: MSP Helpdesk workflow.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Zoho API",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "IT Automation",
+            "techName": "Automated Remediation",
+            "owner": "DevOps Team",
+            "desc": "Trigger script (Bash/PS) on Alarm.",
+            "logic": "Value: Self-healing infra.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Script Approved",
+            "price": "Add-on",
+            "effort": "High",
+            "crit": "Medium",
+            "sla": "0.995"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "ITSM Integration (Freshservice)",
+            "techName": "Freshservice Integration",
+            "owner": "Support Team",
+            "desc": "Create tickets in Freshservice.",
+            "logic": "Value: ITSM Workflow.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Freshservice API",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "ITSM Integration (ServiceNow)",
+            "techName": "ServiceNow Incident Sync",
+            "owner": "ITSM Team",
+            "desc": "Auto-create/resolve SNOW tickets.",
+            "logic": "Value: ITSM Workflow.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SNOW API",
+            "price": "Add-on",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Incident Mgmt (PagerDuty)",
+            "techName": "PagerDuty Integration",
+            "owner": "ITSM Team",
+            "desc": "Trigger PagerDuty incidents for on-call.",
+            "logic": "Value: Incident response management.",
+            "ver": "V4.0 (Current)",
+            "avail": "Add-on",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "PD API Key",
+            "price": "Add-on",
+            "effort": "Low",
+            "crit": "Critical",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Mobile Ops (Telegram)",
+            "techName": "Telegram Bot Integration",
+            "owner": "DevOps Team",
+            "desc": "Send alerts to Telegram groups.",
+            "logic": "Value: Mobile-first ops teams.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Bot Token",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Medium",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Notification Services",
+            "techName": "Email Alerting (SMTP)",
+            "owner": "Product Team",
+            "desc": "Standard HTML email notifications.",
+            "logic": "Value: Basic notification.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SMTP Server",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Resource Utilization Reports",
+            "techName": "Top N Report",
+            "owner": "Product Team",
+            "desc": "Top CPU Memory Disk consumers.",
+            "logic": "Value: Resource planning.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Basic",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Data Retention",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "Low",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "SIEM Forwarding",
+            "techName": "Syslog Forwarding",
+            "owner": "SecOps",
+            "desc": "Forward Cloudmon events to external SIEM (Splunk).",
+            "logic": "Value: Enterprise security integration.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "SIEM IP",
+            "price": "Included",
+            "effort": "Medium",
+            "crit": "High",
+            "sla": "0.999"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "SLA Compliance Reports",
+            "techName": "Availability Report",
+            "owner": "Product Team",
+            "desc": "Up/Down time % for selected group.",
+            "logic": "Value: SLA compliance.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Premium",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Data Retention",
+            "price": "Included",
+            "effort": "Low",
+            "crit": "High",
+            "sla": "N/A"
+        },
+        {
+            "cat": "Unified Platform",
+            "webName": "Universal API Connector",
+            "techName": "Custom Webhook (POST)",
+            "owner": "DevOps Team",
+            "desc": "Send JSON payload to any REST API.",
+            "logic": "Value: Universal integration.",
+            "ver": "V4.0 (Current)",
+            "avail": "Core",
+            "pkg": "Enterprise",
+            "spoc": "Fawaz Majeed",
+            "ref": "UserGuide v4.0",
+            "ready": "Endpoint URL",
+            "price": "Included",
+            "effort": "High",
+            "crit": "High",
+            "sla": "0.999"
+        }
+    ];
+
+    // DOM ELEMENTS
+    const catSelect = document.getElementById('catSelect');
+    const servSelect = document.getElementById('servSelect');
+    const contentArea = document.getElementById('contentArea');
+    const emptyState = document.getElementById('emptyState');
+    const serviceCard = document.getElementById('serviceCard');
+
+    // UI FIELDS MAPPING
+    const ui = {
+        webName: document.getElementById('dWebName'),
+        techName: document.getElementById('dTechName'),
+        owner: document.getElementById('dOwner'),
+        pkg: document.getElementById('dPkg'),
+        desc: document.getElementById('dDesc'),
+        logic: document.getElementById('dLogic'),
+        ver: document.getElementById('dVer'),
+        price: document.getElementById('dPrice'),
+        ready: document.getElementById('dReady'),
+        effort: document.getElementById('dEffort'),
+        crit: document.getElementById('dCrit'),
+        sla: document.getElementById('dSLA'),
+        ref: document.getElementById('dRef')
+    };
+
+    // INITIALIZATION
+    function init() {
+        // Extract unique Categories and Sort
+        const categories = [...new Set(db.map(item => item.cat))].sort();
+        
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            catSelect.appendChild(option);
+        });
+    }
+
+    // EVENT LISTENERS
+    catSelect.addEventListener('change', (e) => {
+        const selectedCat = e.target.value;
+        
+        // Reset Service Dropdown
+        servSelect.innerHTML = '<option value="">-- Select Service --</option>';
+        servSelect.disabled = true;
+        hideCard();
+
+        if (selectedCat) {
+            // Filter services by category and sort by Name
+            const services = db.filter(item => item.cat === selectedCat)
+                               .sort((a, b) => a.webName.localeCompare(b.webName));
+            
+            services.forEach(srv => {
+                const option = document.createElement('option');
+                option.value = srv.webName; // Use webName as identifier
+                option.textContent = srv.webName;
+                servSelect.appendChild(option);
+            });
+            servSelect.disabled = false;
+        }
+    });
+
+    servSelect.addEventListener('change', (e) => {
+        const selectedName = e.target.value;
+        
+        if (selectedName) {
+            // Find service by WebName
+            const service = db.find(item => item.webName === selectedName);
+            showCard(service);
+        } else {
+            hideCard();
+        }
+    });
+
+    // RENDER FUNCTION
+    function showCard(data) {
+        // Text Fields
+        ui.webName.textContent = data.webName;
+        ui.techName.textContent = data.techName;
+        ui.owner.textContent = `Owner: ${data.owner} | SPOC: ${data.spoc}`;
+        ui.desc.textContent = data.desc;
+        ui.logic.textContent = data.logic;
+        ui.ver.textContent = data.ver;
+        ui.price.textContent = data.price;
+        ui.ready.textContent = data.ready;
+        ui.effort.textContent = data.effort;
+        ui.sla.textContent = data.sla;
+        ui.ref.textContent = data.ref;
+
+        // Badge Styling - Package
+        ui.pkg.textContent = data.pkg;
+        ui.pkg.className = 'badge ' + (data.pkg === 'Basic' || data.pkg === 'Core' ? 'badge-core' : 'badge-addon');
+
+        // Badge Styling - Criticality
+        ui.crit.textContent = data.crit;
+        let critClass = 'badge-crit-low';
+        if (data.crit === 'High') critClass = 'badge-crit-high';
+        if (data.crit === 'Medium') critClass = 'badge-crit-med';
+        if (data.crit === 'Critical') critClass = 'badge-crit-high';
+        ui.crit.className = 'badge ' + critClass;
+
+        // Show UI
+        emptyState.style.display = 'none';
+        serviceCard.style.display = 'block';
+    }
+
+    function hideCard() {
+        serviceCard.style.display = 'none';
+        emptyState.style.display = 'flex';
+    }
+
+    // Run Init
+    init();
+
+</script>
+
+</body>
+</html>
